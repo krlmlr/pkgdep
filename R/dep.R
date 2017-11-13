@@ -42,7 +42,8 @@ as_pkgdep <- function(x) {
   x_unnested[x_unnested$Dep != "R", ]
 }
 
-recursive_pkgdep <- function(x, pkgdep, dependencies = TRUE) {
+#' @export
+get_all_deps <- function(x, pkgdep, dependencies = TRUE) {
   if (isTRUE(dependencies)) {
     dependencies <- c("Depends", "Imports", "Suggests", "LinkingTo")
     next_dependencies <- c("Depends", "Imports", "LinkingTo")

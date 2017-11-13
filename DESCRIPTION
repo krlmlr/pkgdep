@@ -11,3 +11,4 @@ Date: 2017-11-13
 BugReports: https://github.com/krlmlr/pkgdep/issues
 URL: https://github.com/krlmlr/pkgdep, http://krlmlr.github.io/pkgdep
 Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.0.1
