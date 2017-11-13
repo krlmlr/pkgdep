@@ -1,0 +1,63 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+# pkgdep
+
+The goal of pkgdep is to provide a nice API for analyzing the dependency structure from the return value of `available.packages()` and other functions.
+
+## Example
+
+```{r eval = FALSE}
+library(pkgdep)
+```
+
+
+```{r echo=FALSE}
+devtools::load_all(quiet = TRUE)
+```
+
+```{r}
+library(tibble)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+pkgdep <- as_pkgdep(available.packages())
+
+tibble_revdeps <- get_revdeps("tibble", pkgdep)
+tibble_revdeps
+
+all_tibble_revdep_deps <- get_all_deps(tibble_revdeps, pkgdep)
+as_tibble(all_tibble_revdep_deps)
+
+# All packages used for revdep-checking tibble
+individual_tibble_revdep_deps <-
+  tibble(revdep = tibble_revdeps) %>%
+  rowwise() %>% 
+  mutate(all_deps = list(get_all_deps(revdep, pkgdep))) %>%
+  ungroup()
+
+# How many times is each package used during the revdepcheck process?
+individual_tibble_revdep_deps %>%
+  rowwise() %>%
+  mutate(all_pkgs = list(unique(all_deps$Dep))) %>%
+  select(-all_deps) %>%
+  unnest() %>%
+  count(all_pkgs) %>% 
+  arrange(-n)
+```
+
