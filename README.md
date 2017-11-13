@@ -66,6 +66,32 @@ tibble_revdeps
 #> [100] "haploR"           
 #>  [ reached getOption("max.print") -- omitted 162 entries ]
 
+# All dependencies of tibble
+all_tibble_deps <- get_all_deps("tibble", pkgdep, c("Depends", "Imports"))
+as_tibble(all_tibble_deps)
+#> # A tibble: 6 x 4
+#>   Package DepType Dep     Version  
+#> * <chr>   <chr>   <chr>   <chr>    
+#> 1 tibble  Imports methods <NA>     
+#> 2 tibble  Imports rlang   <NA>     
+#> 3 tibble  Imports Rcpp    >= 0.12.3
+#> 4 tibble  Imports utils   <NA>     
+#> 5 Rcpp    Imports methods <NA>     
+#> 6 Rcpp    Imports utils   <NA>
+
+# Some packages are listed more than once:
+as_tibble(all_tibble_deps) %>% 
+  count(Dep) %>% 
+  arrange(-n)
+#> # A tibble: 4 x 2
+#>   Dep         n
+#>   <chr>   <int>
+#> 1 methods     2
+#> 2 utils       2
+#> 3 Rcpp        1
+#> 4 rlang       1
+
+# All packages used for revdep-checking tibble
 all_tibble_revdep_deps <- get_all_deps(tibble_revdeps, pkgdep)
 as_tibble(all_tibble_revdep_deps)
 #> # A tibble: 6,469 x 4
@@ -83,33 +109,45 @@ as_tibble(all_tibble_revdep_deps)
 #> 10 dat        Depends methods           <NA>     
 #> # ... with 6,459 more rows
 
-# All packages used for revdep-checking tibble
+# Separate dependency graphs for each revdep of tibble
 individual_tibble_revdep_deps <-
   tibble(revdep = tibble_revdeps) %>%
   rowwise() %>% 
   mutate(all_deps = list(get_all_deps(revdep, pkgdep))) %>%
   ungroup()
 
-# How many times is each package used during the revdepcheck process?
+# How many times is each package used during the revdepcheck process, excluding direct dependencies of tibble?
 individual_tibble_revdep_deps %>%
   rowwise() %>%
   mutate(all_pkgs = list(unique(all_deps$Dep))) %>%
   select(-all_deps) %>%
   unnest() %>%
-  count(all_pkgs) %>% 
-  arrange(-n)
-#> # A tibble: 802 x 2
-#>    all_pkgs      n
-#>    <chr>     <int>
-#>  1 methods     262
-#>  2 Rcpp        262
-#>  3 rlang       262
-#>  4 tibble      262
-#>  5 utils       262
-#>  6 R6          261
-#>  7 magrittr    260
-#>  8 tools       260
-#>  9 grDevices   252
-#> 10 digest      251
-#> # ... with 792 more rows
+  count(all_pkgs) %>%
+  filter(!(all_pkgs %in% all_tibble_deps$Dep)) %>%
+  arrange(-n) %>%
+  print(n = 20)
+#> # A tibble: 798 x 2
+#>    all_pkgs       n
+#>    <chr>      <int>
+#>  1 tibble       262
+#>  2 R6           261
+#>  3 magrittr     260
+#>  4 tools        260
+#>  5 grDevices    252
+#>  6 digest       251
+#>  7 stats        248
+#>  8 mime         237
+#>  9 jsonlite     235
+#> 10 stringi      234
+#> 11 BH           233
+#> 12 stringr      227
+#> 13 assertthat   225
+#> 14 crayon       218
+#> 15 praise       208
+#> 16 testthat     208
+#> 17 graphics     206
+#> 18 grid         201
+#> 19 pkgconfig    200
+#> 20 yaml         200
+#> # ... with 778 more rows
 ```

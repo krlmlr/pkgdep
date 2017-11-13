@@ -41,23 +41,36 @@ pkgdep <- as_pkgdep(available.packages())
 tibble_revdeps <- get_revdeps("tibble", pkgdep)
 tibble_revdeps
 
+# All dependencies of tibble
+all_tibble_deps <- get_all_deps("tibble", pkgdep, c("Depends", "Imports"))
+as_tibble(all_tibble_deps)
+
+# Some packages are listed more than once:
+as_tibble(all_tibble_deps) %>% 
+  count(Dep) %>% 
+  arrange(-n)
+
+# All packages used for revdep-checking tibble
 all_tibble_revdep_deps <- get_all_deps(tibble_revdeps, pkgdep)
 as_tibble(all_tibble_revdep_deps)
 
-# All packages used for revdep-checking tibble
+# Separate dependency graphs for each revdep of tibble
 individual_tibble_revdep_deps <-
   tibble(revdep = tibble_revdeps) %>%
   rowwise() %>% 
   mutate(all_deps = list(get_all_deps(revdep, pkgdep))) %>%
   ungroup()
 
-# How many times is each package used during the revdepcheck process?
+# How many times is each package used during the revdepcheck process,
+# excluding direct dependencies of tibble?
 individual_tibble_revdep_deps %>%
   rowwise() %>%
   mutate(all_pkgs = list(unique(all_deps$Dep))) %>%
   select(-all_deps) %>%
   unnest() %>%
-  count(all_pkgs) %>% 
-  arrange(-n)
+  count(all_pkgs) %>%
+  filter(!(all_pkgs %in% all_tibble_deps$Dep)) %>%
+  arrange(-n) %>%
+  print(n = 20)
 ```
 
