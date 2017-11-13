@@ -34,10 +34,32 @@ as_pkgdep <- function(x) {
     stringsAsFactors = FALSE
   )
 
-  version_rx <- "^([^[:space:]]+)[[:space:]]*(?:|[(](.*)[)])$"
+  version_rx <- "^([^\\s]+)[\\s]*(?:|[(]((?:.|\\s)*)[)])[\\s]*$"
   x_unnested$Version <- gsub(version_rx, "\\2", x_unnested$Dep, perl = TRUE)
   x_unnested$Version[x_unnested$Version == ""] <- NA_character_
   x_unnested$Dep <- gsub(version_rx, "\\1", x_unnested$Dep, perl = TRUE)
 
-  x_unnested
+  x_unnested[x_unnested$Dep != "R", ]
+}
+
+recursive_pkgdep <- function(x, pkgdep, dependencies = TRUE) {
+  if (isTRUE(dependencies)) {
+    dependencies <- c("Depends", "Imports", "Suggests", "LinkingTo")
+    next_dependencies <- c("Depends", "Imports", "LinkingTo")
+  } else {
+    next_dependencies <- dependencies
+  }
+
+  todo <- x
+  ret <- pkgdep[0, ]
+  while (length(todo) > 0) {
+    message(paste(todo, collapse = ", "))
+    rows <- (pkgdep$DepType %in% dependencies) & (pkgdep$Package %in% todo)
+    new <- pkgdep[rows, ]
+    ret <- rbind(ret, new)
+    todo <- setdiff(new$Dep, ret$Package)
+    dependencies <- next_dependencies
+  }
+
+  ret
 }
