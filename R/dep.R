@@ -54,7 +54,6 @@ get_all_deps <- function(x, pkgdep, dependencies = TRUE) {
   todo <- x
   ret <- pkgdep[0, ]
   while (length(todo) > 0) {
-    message(paste(todo, collapse = ", "))
     rows <- (pkgdep$DepType %in% dependencies) & (pkgdep$Package %in% todo)
     new <- pkgdep[rows, ]
     ret <- rbind(ret, new)
